@@ -38,6 +38,7 @@ const badgeRoute = async (req, res) => {
   );
 
   const tags = versionRequest.data["dist-tags"];
+  console.log(versionRequest.data);
 
   if (!tags) {
     send(
