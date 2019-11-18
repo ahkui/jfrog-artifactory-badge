@@ -1,8 +1,19 @@
-const { send, buffer } = require("micro");
+const {
+  send,
+  buffer
+} = require("micro");
 const axios = require("axios");
 const fs = require("fs");
-const { router, get } = require("microrouter");
+const {
+  router,
+  get
+} = require("microrouter");
+const semver = require('semver')
+
 require("dotenv-safe").config();
+
+const unknownImageUrl = `https://img.shields.io/badge/version-unknown-lightgrey.svg?style=flat-square`;
+let unknownImage;
 
 const rootRoute = async (req, res) =>
   send(
@@ -12,19 +23,44 @@ const rootRoute = async (req, res) =>
       "Please use this path format to get your badges: /@spscommerce/packagename"
     )
   );
+
 const notFoundRoute = async (req, res) =>
   send(res, 404, await Promise.resolve("Not found route"));
 
+const sendUnknown = async () => {
+  if (!unknownImage)
+    unknownImage = await axios.get(unknownImageUrl);
+  send(res, 200, await Promise.resolve(unknownImage.data));
+}
+
 const badgeRoute = async (req, res) => {
+  res.setHeader("Content-Type", "image/svg+xml");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Pragma", "no-cache");
+
+  const sendUnknown = async () => {
+    if (!unknownImage)
+      unknownImage = await axios.get(unknownImageUrl);
+    send(res, 200, await Promise.resolve(unknownImage.data));
+  }
+
   if (req.url === "/favicon.ico") {
     send(res, 200, await Promise.resolve("Favicon not available."));
     return;
   }
-  const packageName = req.url.substring(1);
+
+  let packageName = req.url.substring(1);
+
+  let targetTag = `latest`;
+  if (packageName.lastIndexOf('@') > 0) {
+    targetTag = packageName.substring(packageName.lastIndexOf('@') + 1);
+    packageName = packageName.substring(0, packageName.lastIndexOf('@'));
+  }
 
   const versionRequestUrl = `${
     process.env.ARTIFACTORY_BADGE_URI
   }${encodeURIComponent(packageName)}`;
+
   const versionRequestConfig = {
     auth: {
       username: process.env.ARTIFACTORY_BADGE_USERNAME,
@@ -32,28 +68,28 @@ const badgeRoute = async (req, res) => {
     }
   };
 
-  const versionRequest = await axios.get(
-    versionRequestUrl,
-    versionRequestConfig
-  );
+  let versionRequest;
+
+  try {
+    versionRequest = await axios.get(
+      versionRequestUrl,
+      versionRequestConfig
+    );
+  } catch (error) {
+    return await sendUnknown();
+  }
 
   const tags = versionRequest.data["dist-tags"];
-  console.log(versionRequest.data);
 
   if (!tags) {
-    send(
-      res,
-      404,
-      "Could not determine latest version for package " + packageName
-    );
+    await sendUnknown()
     return;
   }
-  const latestDistVersion = tags.latest;
-  console.log(latestDistVersion);
-  res.setHeader("Content-Type", "image/svg+xml");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Pragma","no-cache");
-  
+
+  const latestDistVersion = tags[targetTag] || targetTag;
+  if (!semver.valid(latestDistVersion))
+    return await sendUnknown();
+
   const version = latestDistVersion.replace(/-/gi, "--");
   const imageUrl = `https://img.shields.io/badge/version-${version}-green.svg?style=flat-square`;
   const img = await axios.get(imageUrl);
