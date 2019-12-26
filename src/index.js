@@ -29,12 +29,6 @@ const rootRoute = async (req, res) =>
 const notFoundRoute = async (req, res) =>
   send(res, 404, await Promise.resolve("Not found route"));
 
-const sendUnknown = async () => {
-  if (!unknownImage)
-    unknownImage = await axios.get(unknownImageUrl);
-  send(res, 200, await Promise.resolve(unknownImage.data));
-}
-
 const badgeRoute = async (req, res) => {
   res.setHeader("Content-Type", "image/svg+xml");
   res.setHeader("Cache-Control", "no-cache");

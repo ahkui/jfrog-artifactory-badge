@@ -6,7 +6,9 @@
   "scripts": {
     "start": "micro",
     "dev": "micro-dev",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "daemon": "pm2 start app.js --name jfrog-artifactory-badge -i 0",
+    "stop-daemon": "pm2 stop jfrog-artifactory-badge"
   },
   "keywords": [],
   "author": "Jim Cummins <jimthedev@gmail.com> (http://github.com/jimthedev)",
@@ -20,6 +22,7 @@
     "got": "^8.3.1",
     "micro": "^9.3.2",
     "microrouter": "^3.1.3",
+    "pm2": "^4.2.1",
     "request": "^2.87.0",
     "semver": "^6.3.0"
   }
