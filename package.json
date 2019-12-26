@@ -7,8 +7,10 @@
     "start": "micro",
     "dev": "micro-dev",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "daemon": "pm2 start app.js --name jfrog-artifactory-badge -i 0",
-    "stop-daemon": "pm2 stop jfrog-artifactory-badge"
+    "daemon:start": "pm2 start app.js --name jfrog-artifactory-badge -i 0 --watch",
+    "daemon:stop": "pm2 stop jfrog-artifactory-badge",
+    "daemon:restart": "pm2 restart jfrog-artifactory-badge",
+    "daemon:delete": "pm2 delete jfrog-artifactory-badge"
   },
   "keywords": [],
   "author": "Jim Cummins <jimthedev@gmail.com> (http://github.com/jimthedev)",
