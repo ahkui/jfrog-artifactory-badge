@@ -6,4 +6,6 @@ COPY . .
 
 RUN npm install
 
-CMD npm start
+ENV PORT=3000
+
+CMD npm start -- --listen tcp://0.0.0.0:$PORT
