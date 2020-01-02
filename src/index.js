@@ -15,6 +15,8 @@ require("dotenv-safe").config();
 const unknownImageUrl = `https://img.shields.io/badge/version-unknown-lightgrey.svg?style=flat-square`;
 let unknownImage;
 
+const cacheBadgeData = {}
+
 const rootRoute = async (req, res) =>
   send(
     res,
@@ -26,12 +28,6 @@ const rootRoute = async (req, res) =>
 
 const notFoundRoute = async (req, res) =>
   send(res, 404, await Promise.resolve("Not found route"));
-
-const sendUnknown = async () => {
-  if (!unknownImage)
-    unknownImage = await axios.get(unknownImageUrl);
-  send(res, 200, await Promise.resolve(unknownImage.data));
-}
 
 const badgeRoute = async (req, res) => {
   res.setHeader("Content-Type", "image/svg+xml");
@@ -92,8 +88,12 @@ const badgeRoute = async (req, res) => {
 
   const version = latestDistVersion.replace(/-/gi, "--");
   const imageUrl = `https://img.shields.io/badge/version-${version}-green.svg?style=flat-square`;
-  const img = await axios.get(imageUrl);
-  send(res, 200, await Promise.resolve(img.data));
+  if(cacheBadgeData[version] === undefined)
+    cacheBadgeData[version] = (await axios.get(imageUrl)).data
+  const img = cacheBadgeData[version]
+
+  console.log(`${packageName}@${latestDistVersion}`)
+  send(res, 200, await Promise.resolve(img));
   return;
 };
 
