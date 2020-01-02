@@ -1,0 +1,8 @@
+version: "3"
+
+services:
+  jfrog-artifactory-badge:
+    build: .
+    image: ahkui/jfrog-artifactory-badge:latest # goes to youruser DockerHub registry
+    env_file: .env
+    network_mode: host
